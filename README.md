@@ -16,7 +16,7 @@ exposes a number of functionalities from `yt`. These include:
 * Slice and projection plots
 * Symbolic units, YTArrays, YTQuantities
 
-`YT` version 0.4 can be installed in Julia version 0.5 or higher. To install it, just run:
+`YT` version 0.5 can be installed in Julia version 1.0 or higher. To install it, just run:
 
     Pkg.add("YT")
 
