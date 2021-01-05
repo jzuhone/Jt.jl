@@ -1,10 +1,9 @@
-__precompile__()
 module unit_systems
 
 import PyCall: PyObject, pystring
 import Base: show, getindex
 
-type UnitSystem
+struct UnitSystem
     us::PyObject
     constants::PyObject
     function UnitSystem(us::PyObject)

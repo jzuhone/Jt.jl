@@ -1,9 +1,7 @@
-__precompile__()
 module data_objects
 
 import PyCall: PyObject, PyDict, pycall, pystring, PyVector
-import Base: size, show, showarray, display, showerror, start, next, done,
-       getindex
+import Base: size, show, display, showerror, getindex
 import ..array: YTArray, YTQuantity, in_units, array_or_quan
 import ..fixed_resolution: FixedResolutionBuffer
 
@@ -14,7 +12,7 @@ Field  = Union{String,Tuple{String,String}}
 
 # Dataset
 
-type Dataset
+struct Dataset
     ds::PyObject
     parameters::Dict
     domain_center::YTArray
@@ -38,10 +36,10 @@ type Dataset
             YTArray(ds["domain_right_edge"]),
             YTArray(ds["domain_width"]),
             ds[:domain_dimensions],
-            ds[:dimensionality][1],
+            ds[:dimensionality],
             YTQuantity(ds["current_time"]),
             ds[:current_redshift],
-            ds[:max_level][1])
+            ds[:max_level])
     end
 end
 
@@ -106,7 +104,7 @@ end
 
 # Data containers
 
-abstract DataContainer
+abstract type DataContainer end
 
 function parse_fps(field_parameters)
     fps = nothing
@@ -142,7 +140,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> dd = YT.AllData(ds)
 ```
 """
-type AllData <: DataContainer
+struct AllData <: DataContainer
     cont::PyObject
     ds::Dataset
     field_dict::Dict
@@ -186,7 +184,7 @@ julia> c = [0.5,0.5,0.5]
 julia> point = YT.Point(ds,c)
 ```
 """
-type Point <: DataContainer
+struct Point <: DataContainer
     cont::PyObject
     ds::Dataset
     coord::Array{Float64,1}
@@ -241,7 +239,7 @@ julia> center = "max"
 julia> region = YT.Region(ds,center,left_edge,right_edge)
 ```
 """
-type Region <: DataContainer
+struct Region <: DataContainer
     cont::PyObject
     ds::Dataset
     center::YTArray
@@ -318,7 +316,7 @@ julia> c = [0.5,0.5,0.5]
 julia> disk = Disk(ds, c, [1,0,0], (1, "kpc"), (10, "kpc"))
 ```
 """
-type Disk <: DataContainer
+struct Disk <: DataContainer
     cont::PyObject
     ds::Dataset
     center::YTArray
@@ -383,7 +381,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> ray = YT.Ray(ds, [0.2, 0.74, 0.11], [0.4, 0.91, 0.31])
 ```
 """
-type Ray <: DataContainer
+struct Ray <: DataContainer
     cont::PyObject
     ds::Dataset
     start_point::YTArray
@@ -437,7 +435,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> oray = YT.OrthoRay(ds, 0, (0.2, 0.74))
 ```
 """
-type OrthoRay <: DataContainer
+struct OrthoRay <: DataContainer
     cont::PyObject
     ds::Dataset
     axis::Integer
@@ -493,7 +491,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 juila> cp = YT.Cutting(ds, [0.1, 0.2, -0.9], [0.5, 0.42, 0.6])
 ```
 """
-type Cutting <: DataContainer
+struct Cutting <: DataContainer
     cont::PyObject
     ds::Dataset
     normal::Array{Float64,1}
@@ -567,7 +565,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> prj = YT.Proj(ds, "density", 0)
 ```
 """
-type Proj <: DataContainer
+struct Proj <: DataContainer
     cont::PyObject
     ds::Dataset
     field
@@ -623,7 +621,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> slc = YT.Slice(ds, 0, 0.25)
 ```
 """
-type Slice <: DataContainer
+struct Slice <: DataContainer
     cont::PyObject
     ds::Dataset
     axis::Integer
@@ -747,7 +745,7 @@ julia> c = [0.5,0.5,0.5]
 julia> sp = YT.Sphere(ds, c, (1., "kpc"))
 ```
 """
-type Sphere <: DataContainer
+struct Sphere <: DataContainer
     cont::PyObject
     ds::Dataset
     center::YTArray
@@ -805,7 +803,7 @@ julia> sp = YT.Sphere(ds, "max", (1.0, "Mpc"))
 julia> cr = YT.CutRegion(sp, ["obj['temperature'] < 1e3"])
 ```
 """
-type CutRegion <: DataContainer
+struct CutRegion <: DataContainer
     cont::PyObject
     ds::Dataset
     conditionals::Array{String,1}
@@ -821,19 +819,19 @@ end
 
 # Grids
 
-type Grids <: AbstractArray
-    grids::Array
+struct Grids{T,N} <: AbstractArray{T,N}
+    grids::Array{T,N}
     grid_dict::Dict
-    function Grids(ds::Dataset)
+    function Grids{T,N}(ds::Dataset) where {T,N}
         new(ds.ds[:index][:grids], Dict())
     end
-    function Grids(grid_array::Array)
+    function Grids{T,N}(grid_array::Array) where {T,N}
         new(grid_array, Dict())
     end
-    function Grids(grid::PyObject)
+    function Grids{T,N}(grid::PyObject) where {T,N}
         new([grid], Dict())
     end
-    function Grids(nothing)
+    function Grids{T,N}(nothing) where {T,N}
         new([], Dict())
     end
 end
@@ -842,7 +840,7 @@ size(grids::Grids) = size(grids.grids)
 
 # Grid
 
-type Grid <: DataContainer
+struct Grid <: DataContainer
     cont::PyObject
     left_edge::YTArray
     right_edge::YTArray
@@ -880,7 +878,7 @@ julia> ds = YT.load("RedshiftOutput0005")
 julia> cube = CoveringGrid(ds, 2, [0.0, 0.0, 0.0], [128, 128, 128])
 ```
 """
-type CoveringGrid <: DataContainer
+struct CoveringGrid <: DataContainer
     cont::PyObject
     ds::Dataset
     left_edge::YTArray
@@ -1031,42 +1029,14 @@ function getindex(grids::Grids, i::Integer)
     return grids.grid_dict[i]
 end
 
-getindex(grids::Grids, idxs::Range) = Grids(grids.grids[idxs])
+getindex(grids::Grids, idxs::AbstractRange) = Grids(grids.grids[idxs])
 
 # Show
 
 show(io::IO, ds::Dataset) = print(io,pystring(ds.ds))
 show(io::IO, dc::DataContainer) = print(io,pystring(dc.cont))
 
-function showarray(io::IO, grids::Grids)
-    num_grids = length(grids)
-    if num_grids == 0
-        print(io, "[]")
-        return
-    end
-    if num_grids == 1
-        print(io, "[ $(pystring(grids.grids[1])) ]")
-        return
-    end
-    n = num_grids > 8 ? 5 : num_grids
-    println(io, "[ $(pystring(grids.grids[1])),")
-    for grid in grids.grids[2:n-1]
-        println(io, "  $(pystring(grid)),")
-    end
-    if num_grids > 8
-        println(io, "  ...")
-        for grid in grids.grids[num_grids-3:num_grids-1]
-            println(io, "  $(pystring(grid)),")
-        end
-    end
-    print(io, "  $(pystring(grids.grids[end])) ]")
-end
-
-show(io::IO, grids::Grids) = showarray(io, grids)
+#Base.print_array(io::IO, grids::Grids) = Base.print_array(io, data(x))
 display(grids::Grids) = show(STDOUT, grids)
-
-start(grids::Grids) = 1
-next(grids::Grids,i) = (grids[i],i+1)
-done(grids::Grids,i) = (i > length(grids))
 
 end

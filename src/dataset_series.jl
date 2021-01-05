@@ -1,7 +1,7 @@
 module dataset_series
 
 import ..data_objects: Dataset
-import Base: length, start, next, done, getindex
+import Base: length, getindex
 
 import PyCall: pyimport_conda, PyObject, PyNULL
 
@@ -34,7 +34,7 @@ julia> time = YTArray(time)
 julia> max_dens = YTArray(max_dens)
 ```
 """
-type DatasetSeries
+struct DatasetSeries
     ts::PyObject
     num_ds::Int
     function DatasetSeries(fns::Array{String,1})
@@ -45,13 +45,9 @@ type DatasetSeries
 end
 
 function getindex(ts::DatasetSeries, index::Integer)
-    Dataset(get(ts.ts, index-1))
+    Dataset(get(ts.ts, index-1, nothing))
 end
 
 length(ts::DatasetSeries) = ts.num_ds
-
-start(ts::DatasetSeries) = 1
-next(ts::DatasetSeries,i) = (ts[i],i+1)
-done(ts::DatasetSeries,i) = (i > length(ts))
 
 end

@@ -1,4 +1,3 @@
-__precompile__()
 module plots
 
 import ..data_objects: Dataset, DataContainer, parse_fps
