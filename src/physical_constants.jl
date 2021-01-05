@@ -1,4 +1,3 @@
-__precompile__()
 module physical_constants
 
 import YT.array: YTQuantity

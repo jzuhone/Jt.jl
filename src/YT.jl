@@ -1,4 +1,3 @@
-__precompile__()
 module YT
 
 import Base: setindex!, getindex, show
@@ -86,7 +85,7 @@ import .unit_systems: UnitSystem
 
 unit_system_registry = Dict()
 
-type YTConfig
+struct YTConfig
     ytcfg::PyObject
 end
 
@@ -105,7 +104,7 @@ function __init__()
     copy!(yt, pyimport_conda("yt", "yt"))
     min_version = v"3.3.1"
 
-    yt_version = convert(VersionNumber, yt[:__version__])
+    yt_version = VersionNumber(yt[:__version__])
     if yt_version < min_version
         err_msg = "Your yt installation (v. $yt_version) is not up to " *
                   "date. Please install a version >= v. $min_version."

@@ -1,4 +1,3 @@
-__precompile__()
 module profiles
 
 import PyCall: pyimport_conda, PyObject, PyNULL
@@ -68,7 +67,7 @@ julia> print(profile.x)
 julia> print(profile["density"])
 ```
 """
-type YTProfile
+struct YTProfile
     profile::PyObject
     source::DataContainer
     bin_fields

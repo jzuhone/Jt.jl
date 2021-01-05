@@ -1,4 +1,3 @@
-__precompile__()
 module fixed_resolution
 
 import PyCall: PyObject
@@ -10,7 +9,7 @@ Field  = Union{String,Tuple{String,String}}
 
 # FixedResolutionBuffer
 
-type FixedResolutionBuffer
+struct FixedResolutionBuffer
     frb::PyObject
     data::Dict
     buff_size::Tuple
